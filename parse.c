@@ -43,24 +43,19 @@ int parse(){
 		if(current_cmd == 1){
 			cmd1[len1] = malloc(strlen(commands[i])*sizeof(char));
 			strcpy(cmd1[len1], commands[i]);
-		
-			printf("cmd1 = %s\n", cmd1[len1]);
 
 			len1++;
 		}
 		else{
 			cmd2[len2] = malloc(strlen(commands[i])*sizeof(char));
 			strcpy(cmd2[len2], commands[i]);
-		
-			printf("cmd 2 = %s\n", cmd2[len2]);
 
 			len2++;
 		}
 	}
 
-	if(builtIns(cmd1, len1)){
-		printf("\nBUILT IN\n");
-	}
+	builtIns(cmd1, len1);
+	
 
 	return 0;
 }
