@@ -5,13 +5,15 @@
 #include <fcntl.h>
 #include "shell_header.h"
 
-int parse(char **envp){
+int parse(char **envp, char abs[]){
 	char *line = NULL;
 	size_t size = 0;
 	char delims[4] = " \t\n";
 	char *special[5] = {">", "<", ">>", "|", "&"};
-
-	printf("MyShell>");
+	
+	char curr[64];
+	getcwd(curr, 64);
+	printf("MyShell %s>", curr);
 	getline(&line, &size, stdin);
 			
 	char *commands[16];
@@ -57,26 +59,50 @@ int parse(char **envp){
 
 	if(!strcmp(specChar,"<") && current_cmd == 2){
 		printf("redirect stdin to %s\n", cmd2[0]);
+		//below code adapted from Week 7 Lab slides 
+		int stdInSave = dup(0);
+		int new_fd = open(cmd2[0], O_RDONLY);
+		dup2(new_fd, 0);	
+		close(new_fd);
+		
+		builtIns(cmd1, len1, envp, abs);
+		
+		fflush(stdin);
+		dup2(stdInSave, 0);
+		close(stdInSave);
+
 	}
 	else if(!strcmp(specChar,">") &&  current_cmd == 2){
 		printf("redirect stdout to %s\n", cmd2[0]);
-		//below code taken directly from 
+		//below code adapted from Week 7 Lab slides 
 		int stdOutSave = dup(1);
-		int new_fd = open(cmd2[0], O_WRONLY);
+		int new_fd = open(cmd2[0], O_WRONLY|O_CREAT|O_TRUNC);
 		dup2(new_fd, 1);	
 		close(new_fd);
 		
-		builtIns(cmd1, len1, envp);
+		builtIns(cmd1, len1, envp, abs);
 		
 		fflush(stdout);
 		dup2(stdOutSave, 1);
 		close(stdOutSave);
 	}
-//	else if(!strcmp(specChar,">>")){
+	else if(!strcmp(specChar,">>") && current_cmd == 2){
+		printf("redirect stdout to %s\n", cmd2[0]);
+		//below code adapted from Week 7 Lab slides 
+		int stdOutSave = dup(1);
+		int new_fd = open(cmd2[0], O_WRONLY|O_CREAT|O_APPEND);
+		dup2(new_fd, 1);	
+		close(new_fd);
 		
-//	}
+		builtIns(cmd1, len1, envp, abs);
+		
+		fflush(stdout);
+		dup2(stdOutSave, 1);
+		close(stdOutSave);
+
+	}
 	if(current_cmd != 2){
-		builtIns(cmd1, len1, envp);
+		builtIns(cmd1, len1, envp, abs);
 	}
 
 	return 0;

@@ -1,2 +1,2 @@
-int parse(char **envp);
-int builtIns(char **cmd, int length, char **envp);
+int parse(char **envp, char abs[]);
+int builtIns(char **cmd, int length, char **envp, char abs[]);

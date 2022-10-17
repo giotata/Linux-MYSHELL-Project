@@ -4,7 +4,7 @@
 #include <dirent.h>
 #include <unistd.h>
 #include "shell_header.h"
-int builtIns(char **cmd, int length, char** envp){
+int builtIns(char **cmd, int length, char** envp, char abs[]){
 	if(!strcmp(cmd[0], "cd")){
 		char cwd[128];
 		if(length == 2){
@@ -59,7 +59,18 @@ int builtIns(char **cmd, int length, char** envp){
 		return 1;
 	}
 	else if(!strcmp(cmd[0], "help")){
+		FILE *fp;
+		char *path;
+		path = malloc(128*sizeof(char));
+		snprintf(path, 128, "%s/README.txt", abs);
 		
+		//printf("%s\n", path);
+		fp = fopen(path, "r");
+		char buffer[128];
+		while(fgets(buffer, 128, fp) != NULL){
+			printf("%s", buffer);
+		}
+			
 		return 1;	
 	}
 	else if(!strcmp(cmd[0], "pause")){
