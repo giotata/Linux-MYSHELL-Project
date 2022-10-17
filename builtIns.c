@@ -44,19 +44,30 @@ int builtIns(char **cmd, int length){
 		return 1;
 	}
 	else if(!strcmp(cmd[0], "environ")){
+		
 		return 1;
 	}
 	else if(!strcmp(cmd[0], "echo")){
+		for(int i = 1; i < length; i++){
+			printf("%s ", cmd[i]);
+		}
+		printf("\n");
 		return 1;
 	}
 	else if(!strcmp(cmd[0], "help")){
+		
 		return 1;	
 	}
 	else if(!strcmp(cmd[0], "pause")){
+ 		char input;
+		input = fgetc(stdin);
+		while(input !='\n'){
+			input = fgetc(stdin);
+		}
 		return 1;
 	}	
-	else if(!strcmp(cmd[0], "quit")){
-		return 1;
+	else if(!strcmp(cmd[0], "quit") | !strcmp(cmd[0], "exit")){
+		exit(1);
 	}
 
 	return 0;

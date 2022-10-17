@@ -12,10 +12,6 @@ int parse(){
 	printf("MyShell>");
 	getline(&line, &size, stdin);
 			
-	if(!strcmp(line, "quit\n") || !strcmp(line, "exit\n")) {
-		exit(0);
-	}
-
 	char *commands[16];
 	char *cmd1[16];
 	int len1 = 0;
