@@ -1,9 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
+#include <fcntl.h>
 #include "shell_header.h"
 
-int parse(){
+int parse(char **envp){
 	char *line = NULL;
 	size_t size = 0;
 	char delims[4] = " \t\n";
@@ -17,7 +19,8 @@ int parse(){
 	int len1 = 0;
 	char *cmd2[16];
 	int len2 = 0;
-	int current_cmd = 1;	
+	int current_cmd = 1;
+	char *specChar;	
 
 	char *tok;
 	int count = 0;
@@ -33,6 +36,8 @@ int parse(){
 		for(int j = 0; j < 5; j++){
 			if(!strcmp(special[j],commands[i])){
 				current_cmd = 2;
+				specChar = malloc(strlen(special[j])*sizeof(char));
+				strcpy(specChar, special[j]);
 				i++;
 			}
 		}
@@ -50,8 +55,29 @@ int parse(){
 		}
 	}
 
-	builtIns(cmd1, len1);
-	
+	if(!strcmp(specChar,"<") && current_cmd == 2){
+		printf("redirect stdin to %s\n", cmd2[0]);
+	}
+	else if(!strcmp(specChar,">") &&  current_cmd == 2){
+		printf("redirect stdout to %s\n", cmd2[0]);
+		//below code taken directly from 
+		int stdOutSave = dup(1);
+		int new_fd = open(cmd2[0], O_WRONLY);
+		dup2(new_fd, 1);	
+		close(new_fd);
+		
+		builtIns(cmd1, len1, envp);
+		
+		fflush(stdout);
+		dup2(stdOutSave, 1);
+		close(stdOutSave);
+	}
+//	else if(!strcmp(specChar,">>")){
+		
+//	}
+	if(current_cmd != 2){
+		builtIns(cmd1, len1, envp);
+	}
 
 	return 0;
 }

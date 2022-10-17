@@ -4,7 +4,7 @@
 
 int main(int argc, char**argv, char **envp){
 	while(1){
-		parse();
+		parse(envp);
 	}
 
 	return 0;

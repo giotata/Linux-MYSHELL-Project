@@ -4,7 +4,7 @@
 #include <dirent.h>
 #include <unistd.h>
 #include "shell_header.h"
-int builtIns(char **cmd, int length){
+int builtIns(char **cmd, int length, char** envp){
 	if(!strcmp(cmd[0], "cd")){
 		char cwd[128];
 		if(length == 2){
@@ -44,7 +44,11 @@ int builtIns(char **cmd, int length){
 		return 1;
 	}
 	else if(!strcmp(cmd[0], "environ")){
-		
+		int i = 0;
+		while(envp[i] != NULL){
+			printf("%s\n", envp[i]);
+			i++;
+		}
 		return 1;
 	}
 	else if(!strcmp(cmd[0], "echo")){
