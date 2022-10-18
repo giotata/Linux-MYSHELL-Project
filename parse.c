@@ -3,6 +3,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <wait.h>
 #include "shell_header.h"
 
 int parse(char **envp, char abs[]){
@@ -58,14 +59,16 @@ int parse(char **envp, char abs[]){
 	}
 
 	if(!strcmp(specChar,"<") && current_cmd == 2){
-		printf("redirect stdin to %s\n", cmd2[0]);
+		//printf("redirect stdin to %s\n", cmd2[0]);
 		//below code adapted from Week 7 Lab slides 
 		int stdInSave = dup(0);
 		int new_fd = open(cmd2[0], O_RDONLY);
 		dup2(new_fd, 0);	
 		close(new_fd);
-		
-		builtIns(cmd1, len1, envp, abs);
+
+		if(!builtIns(cmd1, len1, envp, abs)){
+			printf("execute external command\n");
+		}
 		
 		fflush(stdin);
 		dup2(stdInSave, 0);
@@ -73,36 +76,56 @@ int parse(char **envp, char abs[]){
 
 	}
 	else if(!strcmp(specChar,">") &&  current_cmd == 2){
-		printf("redirect stdout to %s\n", cmd2[0]);
+		//printf("redirect stdout to %s\n", cmd2[0]);
 		//below code adapted from Week 7 Lab slides 
 		int stdOutSave = dup(1);
 		int new_fd = open(cmd2[0], O_WRONLY|O_CREAT|O_TRUNC);
 		dup2(new_fd, 1);	
 		close(new_fd);
 		
-		builtIns(cmd1, len1, envp, abs);
-		
+		if(!builtIns(cmd1, len1, envp, abs)){
+			printf("execute external command\n");
+		}
+
 		fflush(stdout);
 		dup2(stdOutSave, 1);
 		close(stdOutSave);
 	}
 	else if(!strcmp(specChar,">>") && current_cmd == 2){
-		printf("redirect stdout to %s\n", cmd2[0]);
+		//printf("redirect stdout to %s\n", cmd2[0]);
 		//below code adapted from Week 7 Lab slides 
 		int stdOutSave = dup(1);
 		int new_fd = open(cmd2[0], O_WRONLY|O_CREAT|O_APPEND);
 		dup2(new_fd, 1);	
 		close(new_fd);
 		
-		builtIns(cmd1, len1, envp, abs);
-		
+		if(!builtIns(cmd1, len1, envp, abs)){
+			printf("execute external command\n");
+		}
+
 		fflush(stdout);
 		dup2(stdOutSave, 1);
 		close(stdOutSave);
 
 	}
 	if(current_cmd != 2){
-		builtIns(cmd1, len1, envp, abs);
+		if(!builtIns(cmd1, len1, envp, abs)){
+			int pid = fork();
+			if(pid == -1){
+				perror("an error has occurred");
+				exit(1);
+			}
+			
+			if(pid == 0){
+				cmd1[len1] = NULL;
+				execvp(cmd1[0], cmd1);
+				perror("an error has occurred");
+				exit(1);
+			}
+			else{
+				waitpid(pid, NULL, 0);
+			}
+		}
 	}
 
 	return 0;

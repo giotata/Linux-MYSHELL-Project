@@ -1,3 +1,6 @@
+//Built in functions for MyShell
+//Giorgio Tatarelli
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -64,7 +67,6 @@ int builtIns(char **cmd, int length, char** envp, char abs[]){
 		path = malloc(128*sizeof(char));
 		snprintf(path, 128, "%s/README.txt", abs);
 		
-		//printf("%s\n", path);
 		fp = fopen(path, "r");
 		char buffer[128];
 		while(fgets(buffer, 128, fp) != NULL){
@@ -82,7 +84,7 @@ int builtIns(char **cmd, int length, char** envp, char abs[]){
 		return 1;
 	}	
 	else if(!strcmp(cmd[0], "quit") | !strcmp(cmd[0], "exit")){
-		exit(1);
+		exit(0);
 	}
 
 	return 0;
