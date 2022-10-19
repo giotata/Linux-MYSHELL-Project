@@ -81,7 +81,7 @@ int parse(char **envp, char abs[]){
 		//printf("redirect stdout to %s\n", cmd2[0]);
 		//below code adapted from Week 7 Lab slides 
 		int stdOutSave = dup(1);
-		int new_fd = open(cmd2[0], O_WRONLY|O_CREAT,S_IRWXU|S_IRWXG|S_IRWXO|O_TRUNC);
+		int new_fd = open(cmd2[0], O_WRONLY|O_CREAT|O_TRUNC,0777);
 		dup2(new_fd, 1);	
 		close(new_fd);
 		
@@ -97,7 +97,7 @@ int parse(char **envp, char abs[]){
 		//printf("redirect stdout to %s\n", cmd2[0]);
 		//below code adapted from Week 7 Lab slides 
 		int stdOutSave = dup(1);
-		int new_fd = open(cmd2[0], O_WRONLY|O_CREAT,S_IRWXU|S_IRWXG|S_IRWXO|O_APPEND);
+		int new_fd = open(cmd2[0], O_WRONLY|O_CREAT|O_APPEND,0777);
 		dup2(new_fd, 1);	
 		close(new_fd);
 		

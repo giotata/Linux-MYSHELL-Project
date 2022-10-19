@@ -65,7 +65,7 @@ int builtIns(char **cmd, int length, char** envp, char abs[]){
 		FILE *fp;
 		char *path;
 		path = malloc(128*sizeof(char));
-		snprintf(path, 128, "%s/README.txt", abs);
+		snprintf(path, 128, "%s/readme_doc", abs);
 		
 		fp = fopen(path, "r");
 		char buffer[128];
