@@ -1,3 +1,5 @@
+//command line parser for MyShell
+//Giorgio Tatarelli
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -67,7 +69,7 @@ int parse(char **envp, char abs[]){
 		close(new_fd);
 
 		if(!builtIns(cmd1, len1, envp, abs)){
-			printf("execute external command\n");
+			runExternal(cmd1, len1);		
 		}
 		
 		fflush(stdin);
@@ -79,12 +81,12 @@ int parse(char **envp, char abs[]){
 		//printf("redirect stdout to %s\n", cmd2[0]);
 		//below code adapted from Week 7 Lab slides 
 		int stdOutSave = dup(1);
-		int new_fd = open(cmd2[0], O_WRONLY|O_CREAT|O_TRUNC);
+		int new_fd = open(cmd2[0], O_WRONLY|O_CREAT,S_IRWXU|S_IRWXG|S_IRWXO|O_TRUNC);
 		dup2(new_fd, 1);	
 		close(new_fd);
 		
 		if(!builtIns(cmd1, len1, envp, abs)){
-			printf("execute external command\n");
+			runExternal(cmd1, len1);	
 		}
 
 		fflush(stdout);
@@ -95,12 +97,12 @@ int parse(char **envp, char abs[]){
 		//printf("redirect stdout to %s\n", cmd2[0]);
 		//below code adapted from Week 7 Lab slides 
 		int stdOutSave = dup(1);
-		int new_fd = open(cmd2[0], O_WRONLY|O_CREAT|O_APPEND);
+		int new_fd = open(cmd2[0], O_WRONLY|O_CREAT,S_IRWXU|S_IRWXG|S_IRWXO|O_APPEND);
 		dup2(new_fd, 1);	
 		close(new_fd);
 		
 		if(!builtIns(cmd1, len1, envp, abs)){
-			printf("execute external command\n");
+			runExternal(cmd1, len1);	
 		}
 
 		fflush(stdout);
@@ -108,24 +110,31 @@ int parse(char **envp, char abs[]){
 		close(stdOutSave);
 
 	}
+	
 	if(current_cmd != 2){
 		if(!builtIns(cmd1, len1, envp, abs)){
-			int pid = fork();
-			if(pid == -1){
-				perror("an error has occurred");
-				exit(1);
-			}
-			
-			if(pid == 0){
-				cmd1[len1] = NULL;
-				execvp(cmd1[0], cmd1);
-				perror("an error has occurred");
-				exit(1);
-			}
-			else{
-				waitpid(pid, NULL, 0);
-			}
+			runExternal(cmd1, len1);	
 		}
+	}
+
+	return 0;
+}
+
+int runExternal(char **cmd, int len){
+	int pid = fork();
+	if(pid == -1){
+		perror("an error has occurred");
+		exit(1);
+	}
+			
+	if(pid == 0){
+		cmd[len] = NULL;
+		execvp(cmd[0], cmd);
+		perror("an error has occurred");
+		exit(1);
+	}
+	else{
+		waitpid(pid, NULL, 0);
 	}
 
 	return 0;
