@@ -110,6 +110,52 @@ int parse(char **envp, char abs[]){
 		close(stdOutSave);
 
 	}
+	else if(!strcmp(specChar,"|") && current_cmd == 2){
+		int pip[2];
+   		int pid;
+ 		
+  	 	if(pipe(pip) < 0){
+			perror("an error has occurred");
+			exit(1);
+		}
+
+        	pid = fork();
+    
+        	if(pid == 0){
+       			close(1); 
+        
+      			dup2(pip[1], 1);
+        		close(pip[0]);
+			cmd1[len1] = NULL; 
+        		if(execvp(cmd1[0], cmd1) < 0){
+				perror("an error has occurred");
+				exit(1);
+			}
+        	} 
+        	else { 
+     			pid = fork(); 
+     			if(pid == 0){ 
+       		 		close(0); 
+ 		      		dup2(pip[0], 0);
+ 	           		close(pip[1]); 
+   
+            			if(execvp(cmd2[0], cmd2) < 0){
+     					perror("an error has occurred");
+        				exit(1);
+     				}
+        	    	} 
+ 			else {
+                		wait(&pid); 
+               		}
+                }
+    
+  		close(pip[0]);
+   		close(pip[1]);
+     
+		int wstatus;
+ 		waitpid(0,&wstatus,WUNTRACED);
+ 		waitpid(0,&wstatus,WUNTRACED);	
+	}
 	
 	if(current_cmd != 2){
 		if(!builtIns(cmd1, len1, envp, abs)){
