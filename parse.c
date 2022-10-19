@@ -30,7 +30,6 @@ int parse(char **envp, char abs[]){
 	char *tok;
 	int count = 0;
 	tok = strtok(line, delims);
-	
 	while(tok != NULL){	
 		commands[count] = tok;
 		tok = strtok(NULL, delims);
@@ -52,7 +51,7 @@ int parse(char **envp, char abs[]){
 
 			len1++;
 		}
-		else{
+		else if(i < count){
 			cmd2[len2] = malloc(strlen(commands[i])*sizeof(char));
 			strcpy(cmd2[len2], commands[i]);
 
@@ -155,6 +154,15 @@ int parse(char **envp, char abs[]){
 		int wstatus;
  		waitpid(0,&wstatus,WUNTRACED);
  		waitpid(0,&wstatus,WUNTRACED);	
+	}
+	else if(!strcmp(specChar,"&") && current_cmd == 2){
+		int pid = fork();
+		if(pid == 0){
+			cmd1[len1] = NULL;
+			execvp(cmd1[0], cmd1);
+			perror("an error has occurred");
+			exit(1);
+		}
 	}
 	
 	if(current_cmd != 2){
