@@ -8,40 +8,38 @@
 #include <wait.h>
 #include "shell_header.h"
 
-int parse(char **envp, char abs[]){
-	char *line = NULL;
-	size_t size = 0;
+int parse(char *line, char **envp, char abs[]){
 	char delims[4] = " \t\n";
 	char *special[5] = {">", "<", ">>", "|", "&"};
 	
-	char curr[64];
-	getcwd(curr, 64);
-	printf("MyShell %s>", curr);
-	getline(&line, &size, stdin);
-			
 	char *commands[16];
 	char *cmd1[16];
 	int len1 = 0;
 	char *cmd2[16];
 	int len2 = 0;
 	int current_cmd = 1;
-	char *specChar;	
+	char *specChar = " ";
 
 	char *tok;
 	int count = 0;
 	tok = strtok(line, delims);
 	while(tok != NULL){	
-		commands[count] = tok;
+		commands[count] = malloc(strlen(tok)*sizeof(char));
+		strcpy(commands[count], tok);
+		
 		tok = strtok(NULL, delims);
+
 		count++;
 	}
-	
+
 	for(int i = 0; i < count; i++){
 		for(int j = 0; j < 5; j++){
 			if(!strcmp(special[j],commands[i])){
 				current_cmd = 2;
-				specChar = malloc(strlen(special[j])*sizeof(char));
+				specChar = calloc(strlen(special[j]), sizeof(char));
+
 				strcpy(specChar, special[j]);
+
 				i++;
 			}
 		}
@@ -58,7 +56,7 @@ int parse(char **envp, char abs[]){
 			len2++;
 		}
 	}
-
+	
 	if(!strcmp(specChar,"<") && current_cmd == 2){
 		//printf("redirect stdin to %s\n", cmd2[0]);
 		//below code adapted from Week 7 Lab slides 

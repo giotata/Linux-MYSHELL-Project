@@ -72,7 +72,7 @@ int builtIns(char **cmd, int length, char** envp, char abs[]){
 		while(fgets(buffer, 128, fp) != NULL){
 			printf("%s", buffer);
 		}
-			
+		fclose(fp);		
 		return 1;	
 	}
 	else if(!strcmp(cmd[0], "pause")){
