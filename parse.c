@@ -112,7 +112,7 @@ int parse(char *line, char **envp, char abs[]){
    		int pid;
  		
   	 	if(pipe(pip) < 0){
-			perror("an error has occurred");
+			perror("(1) an error has occurred");
 			exit(1);
 		}
 
@@ -125,7 +125,7 @@ int parse(char *line, char **envp, char abs[]){
         		close(pip[0]);
 			cmd1[len1] = NULL; 
         		if(execvp(cmd1[0], cmd1) < 0){
-				perror("an error has occurred");
+				perror("(2) an error has occurred");
 				exit(1);
 			}
         	} 
@@ -135,9 +135,10 @@ int parse(char *line, char **envp, char abs[]){
        		 		close(0); 
  		      		dup2(pip[0], 0);
  	           		close(pip[1]); 
-   
+   				
+				cmd2[len2] = NULL; 
             			if(execvp(cmd2[0], cmd2) < 0){
-     					perror("an error has occurred");
+     					perror("(3) an error has occurred");
         				exit(1);
      				}
         	    	} 
@@ -158,15 +159,18 @@ int parse(char *line, char **envp, char abs[]){
 		if(pid == 0){
 			cmd1[len1] = NULL;
 			execvp(cmd1[0], cmd1);
-			perror("an error has occurred");
+			perror("(4) an error has occurred");
 			exit(1);
 		}
 	}
-	
-	if(current_cmd != 2){
+	else if(current_cmd != 2){
 		if(!builtIns(cmd1, len1, envp, abs)){
 			runExternal(cmd1, len1);	
 		}
+	}
+	else{
+		perror("an error has occurred");
+		exit(1);
 	}
 
 	return 0;
