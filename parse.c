@@ -41,6 +41,7 @@ int parse(char *line, char **envp, char abs[]){
 				strcpy(specChar, special[j]);
 
 				i++;
+				break;
 			}
 		}
 		if(current_cmd == 1){
@@ -56,9 +57,8 @@ int parse(char *line, char **envp, char abs[]){
 			len2++;
 		}
 	}
-	
-	if(!strcmp(specChar,"<") && current_cmd == 2){
-		//printf("redirect stdin to %s\n", cmd2[0]);
+
+	if(!strcmp(specChar,"<") && current_cmd == 2 && len1 > 0 && len2 > 0){
 		//below code adapted from Week 7 Lab slides 
 		int stdInSave = dup(0);
 		int new_fd = open(cmd2[0], O_RDONLY);
@@ -74,8 +74,7 @@ int parse(char *line, char **envp, char abs[]){
 		close(stdInSave);
 
 	}
-	else if(!strcmp(specChar,">") &&  current_cmd == 2){
-		//printf("redirect stdout to %s\n", cmd2[0]);
+	else if(!strcmp(specChar,">") &&  current_cmd == 2 && len1 > 0 && len2 > 0){
 		//below code adapted from Week 7 Lab slides 
 		int stdOutSave = dup(1);
 		int new_fd = open(cmd2[0], O_WRONLY|O_CREAT|O_TRUNC,0777);
@@ -90,8 +89,7 @@ int parse(char *line, char **envp, char abs[]){
 		dup2(stdOutSave, 1);
 		close(stdOutSave);
 	}
-	else if(!strcmp(specChar,">>") && current_cmd == 2){
-		//printf("redirect stdout to %s\n", cmd2[0]);
+	else if(!strcmp(specChar,">>") && current_cmd == 2 && len1 > 0 && len2 > 0){
 		//below code adapted from Week 7 Lab slides 
 		int stdOutSave = dup(1);
 		int new_fd = open(cmd2[0], O_WRONLY|O_CREAT|O_APPEND,0777);
@@ -107,7 +105,7 @@ int parse(char *line, char **envp, char abs[]){
 		close(stdOutSave);
 
 	}
-	else if(!strcmp(specChar,"|") && current_cmd == 2){
+	else if(!strcmp(specChar,"|") && current_cmd == 2 &&  len1 > 0 && len2 > 0){
 		int pip[2];
    		int pid;
  		
@@ -154,7 +152,7 @@ int parse(char *line, char **envp, char abs[]){
  		waitpid(0,&wstatus,WUNTRACED);
  		waitpid(0,&wstatus,WUNTRACED);	
 	}
-	else if(!strcmp(specChar,"&") && current_cmd == 2){
+	else if(!strcmp(specChar,"&") && current_cmd == 2 && len1 > 0){
 		int pid = fork();
 		if(pid == 0){
 			cmd1[len1] = NULL;
