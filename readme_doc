@@ -1,4 +1,48 @@
-this
-is
-a
-placeholder
+OPERATOR'S MANUAL: MYSHELL
+BY: GIORGIO TATARELLI
+
+BUILT IN COMMANDS
+MyShell comes with 8 built in commands:
+
+cd - Prints current directory. Call this function with a valid directory name as an argument
+and it will change the current working directory to the one specified.
+
+clr - Call to clear the screen.
+
+dir - Prints contents of current directory. Call this function with a valid directory name as 
+an argument and it will print the contents of that directory. 
+
+environ - Call to print environment variables.
+
+echo - When called, each word following the command will be printed as a space separated
+line regardless of oringinal spacing.
+
+help - Prints this document.
+
+pause - Pauses shell until user inputs enter.
+
+quit/exit - Exits the program.
+
+BASH COMMANDS
+
+Redirection: "<,>,>>"
+The redirection command operators must follow a command  and will redirect either stdin (<) or 
+stdout (>,>>) to the file name immediately following the operator. This means that in the 
+case of <, the contents of that file will be treated as the input for the specified
+command. Similarly, > and >> will print the output of the function into a file, where
+each operator creates a new file if it doesn't exist and if it does exist then > will overwrite
+the file's contents and >> will append to it.
+
+Piping: "|"
+The pipe operator takes one command on each side and makes the output of the first the input 
+of the second. Specifically, it makes a structure called a pipe that redirects the output of 
+the first function to the "write end" of the pipe and redirects the input of the second to 
+the "read end."
+
+Background Execution: "&"
+The ampersand operator will allow the user to run a command parallel to the shell itself,
+essentially making it so the shell can take a new command immediately without waiting
+for a command to complete. It does this by forking and executing the command immediately
+before the operator.
+
+
