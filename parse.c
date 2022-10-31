@@ -20,6 +20,14 @@ int parse(char *line, char **envp, char abs[]){
 	int len2 = 0;
 	int current_cmd = 1;//keeps track of how many commands there are
 	char *specChar = " ";//will store special command character
+	
+	int stdInSave = dup(0);//save stdin file descriptor
+	int stdOutSave = dup(1);//save stout file descriptor
+	int rdin = 0;
+	int rdout = 0;	
+	int append = 0;
+	char rdinFile[32];
+	char rdoutFile[32];
 
 	char *tok;
 	int count = 0;
@@ -33,14 +41,39 @@ int parse(char *line, char **envp, char abs[]){
 		count++;//keep count of number of arguments in command line
 	}
 
-	for(int i = 0; i < count; i++){//loops over each argument
+	for(int i = 0; i < count; i++){//loops over each argument in command line
 		for(int j = 0; j < 5; j++){//loops over special characters
 			if(!strcmp(special[j],commands[i])){
 				current_cmd = 2;//special character usually indicates new command
 				specChar = calloc(strlen(special[j]), sizeof(char));
 
 				strcpy(specChar, special[j]);//stores special character
+			
+				if(strcmp(specChar, "&")){//& is the only op that can go at the end
+					if(i == count - 1){//if op is last arg, throw error
+						perror("an error has occurred");
+						exit(1);
+					}
+				}
+				else if(i == 0){//if op is first arg, throw error
+					perror("an error has occurred");
+					exit(1);
+				}
 
+				if(!strcmp(specChar,"<")){
+					rdin = 1;
+					strcpy(rdinFile, commands[i+1]);
+				}
+				if(!strcmp(specChar,">")){
+					rdout = 1;
+					strcpy(rdoutFile, commands[i+1]);
+				}
+				if(!strcmp(specChar,">>")){
+					append = 1;
+					rdout = 1;
+					strcpy(rdoutFile, commands[i+1]);
+				}	
+	
 				i++;//goes to next arg
 				break;
 			}
@@ -60,58 +93,30 @@ int parse(char *line, char **envp, char abs[]){
 	}
 	//all special command characters check for several things:
 	//that there are two commands and the length of these commands is > 0
-	if(!strcmp(specChar,"<") && current_cmd == 2 && len1 > 0 && len2 > 0){
+	if(rdin){
 		//below code adapted from Week 7 Lab slides 
-		int stdInSave = dup(0);//save stdin file descriptor
-		int new_fd = open(cmd2[0], O_RDONLY);//open given file for reading
+		int new_fd = open(rdinFile, O_RDONLY);//open given file for reading
 		dup2(new_fd, 0);//replace stdin with file	
 		close(new_fd);//close duplicate file descriptor
-
-		if(!builtIns(cmd1, len1, envp, abs)){
-			runExternal(cmd1, len1);		
-		}
-		
-		fflush(stdin);//clear buffer
-		dup2(stdInSave, 0);//restore stdin
-		close(stdInSave);//close duplicate
-
 	}
-	else if(!strcmp(specChar,">") &&  current_cmd == 2 && len1 > 0 && len2 > 0){
+	if(rdout && !append){
 		//below code adapted from Week 7 Lab slides 
-		int stdOutSave = dup(1);
 		//opens file for writing, creates it if it doesn't exist
 		//0777 grants read/ write permissions
 		//the rest is similar to above but replaces and restores stdout instead
-		int new_fd = open(cmd2[0], O_WRONLY|O_CREAT|O_TRUNC,0777);
+		int new_fd = open(rdoutFile, O_WRONLY|O_CREAT|O_TRUNC,0777);
 		dup2(new_fd, 1);	
 		close(new_fd);
-		
-		if(!builtIns(cmd1, len1, envp, abs)){
-			runExternal(cmd1, len1);	
-		}
-
-		fflush(stdout);
-		dup2(stdOutSave, 1);
-		close(stdOutSave);
 	}
-	else if(!strcmp(specChar,">>") && current_cmd == 2 && len1 > 0 && len2 > 0){
+	if(rdout && append){
 		//below code adapted from Week 7 Lab slides 
-		int stdOutSave = dup(1);
 		//O_APPEND means it appends to the specified file instead of overwriting
-		int new_fd = open(cmd2[0], O_WRONLY|O_CREAT|O_APPEND,0777);
+		int new_fd = open(rdoutFile, O_WRONLY|O_CREAT|O_APPEND,0777);
 		dup2(new_fd, 1);	
 		close(new_fd);
-		
-		if(!builtIns(cmd1, len1, envp, abs)){
-			runExternal(cmd1, len1);	
-		}
-
-		fflush(stdout);
-		dup2(stdOutSave, 1);
-		close(stdOutSave);
 
 	}
-	else if(!strcmp(specChar,"|") && current_cmd == 2 &&  len1 > 0 && len2 > 0){
+	if(!strcmp(specChar,"|") && current_cmd == 2 &&  len1 > 0 && len2 > 0){
 		//below code adapted from pipe and fork example code on Canvas
 		int pip[2];//array to hold file descriptors
    		int pid;
@@ -159,7 +164,7 @@ int parse(char *line, char **envp, char abs[]){
  		waitpid(0,&wstatus,WUNTRACED);
  		waitpid(0,&wstatus,WUNTRACED);	
 	}
-	else if(!strcmp(specChar,"&") && current_cmd == 2 && len1 > 0){
+	if(!strcmp(specChar,"&") && current_cmd == 2 && len1 > 0){
 		int pid = fork();//fork so we can execute one command at the same time as parent
 		if(pid == 0){
 			cmd1[len1] = NULL;
@@ -168,14 +173,31 @@ int parse(char *line, char **envp, char abs[]){
 			exit(1);
 		}
 	}
-	else if(current_cmd != 2){//this is the case where we run a single command
+	if(current_cmd != 2){//this is the case where we run a single command
 		if(!builtIns(cmd1, len1, envp, abs)){
 			runExternal(cmd1, len1);	
 		}
 	}
-	else{//if none of the above cases are triggered, an error has occurred
-		perror("an error has occurred");
-		exit(1);
+	//else{//if none of the above cases are triggered, an error has occurred
+	//	perror("an error has occurred");
+	//	exit(1);
+	//}
+	
+	if(rdin || rdout){
+		if(!builtIns(cmd1, len1, envp, abs)){
+			runExternal(cmd1, len1);	
+		}
+	}
+
+	if(rdin){
+		fflush(stdin);//clear buffer
+		dup2(stdInSave, 0);//restore stdin
+		close(stdInSave);//close duplicate
+	}
+	if(rdout){
+		fflush(stdout);
+		dup2(stdOutSave, 1);
+		close(stdOutSave);
 	}
 
 	return 0;
