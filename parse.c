@@ -96,6 +96,10 @@ int parse(char *line, char **envp, char abs[]){
 	if(rdin){
 		//below code adapted from Week 7 Lab slides 
 		int new_fd = open(rdinFile, O_RDONLY);//open given file for reading
+		if(new_fd == -1){
+			perror("an error has occurred");
+			exit(1);
+		}
 		dup2(new_fd, 0);//replace stdin with file	
 		close(new_fd);//close duplicate file descriptor
 	}
