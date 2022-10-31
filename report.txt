@@ -1,0 +1,60 @@
+IMPLEMENTATION DETAILS FOR MYSHELL
+BY: GIORGIO TATARELLI
+
+MyShell is a program that replicates the linux shell interface and several key functions it has. It comes with various built in
+functions (cd, clr, dir, etc.), and can use execvp to call any external functions available in linux. Some of it's key features are 
+the bash command operators that allow various advanced actions like redirection and background execution. 
+Their implementation is described later.
+
+DESIGN OVERVIEW
+
+main(int argc, char**argv, char **envp) | myShell.c
+Before executing anything, the user can make a choice whether they want to launch MyShell in interactive mode or in batch mode by calling
+MyShell with a bash file name. In interactive mode, the use can input commands one line at a time into the interface provided, similar to 
+a regular shell. In batch mode, MyShell parses each line of the batch file and runs them. With the way my implementation works, it doesn't
+matter where the command comes from, the program treats it the same regardless. 
+
+parse(char *line, char **envp, char abs[]) | parse.c
+Once in the parser, the command line is tokenized and each token is ran through a for loop that stores up to two commands in their own 
+string arrays (important later). Outside of this loop is a loop to check each argument for one of the special command operators
+>,<,>>,|, or & and to execute the commands according to the operator's function. 
+
+"<,>,>>"
+If a redirection operator is found, the program assumes the argument immediately after the operator is a file name. From there, it 
+redirects stdin (<) or stdout (> to overwrite contents, >> to append) to that file. After checking the whole line, the program
+runs the desired command and restores any input streams that were redirected.
+
+"|"
+If a pipe operator is found, the program  creates a pipe, takes the function to the left of pipe, forks, and redirects stdout to the write 
+end of the pipeso the first command's output can go to the second command by forking again and changing stdin to the read end of the pipe, 
+thus making the output of the first the input of the second.
+
+"&"
+If an amperand is found, the program simply forks and executes the command immediately before the operator so that it can run without
+parallel to the shell. 
+
+builtIns(char **cmd, int length, char** envp, char abs[]) | builtins.c
+This function takes a single command, number of arguments, environment variables, and the absolute file path of the shell and returns 1 
+if the command is a built in command and 0 otherwise. Environment variables are printed in environ and the absolute file path allows 
+the program to always be able to find the readme_doc file in the help function. 
+
+runExternal(char **cmd, int len) | parse.c
+Run external takes a single command and it's length. It then forks, NULL terminates the command array, and calls execvp on the command name 
+and arguments to execute the command. 
+
+TESTING PLAN
+Testing occurred throughout the development of the shell, and made EXTENSIVE use of gdb. Specifically, I made extensive use of gdb's 
+"backtrace" feature that tells you exacly where the error occurred even it it's a segfault. Whenever a new function was added, I'd run 
+it in interactive mode to make sure the program at least didn't segfault (as it did many times). Then at the end, I created a batch file 
+with the commands shown in the Week 9 lecture slides and ran it until it could run to completion. Throughout all of this, I am also checking
+for correctness i.e. making sure > overwrites and >> appends. Then it was time to check for errors, where I would do things like
+entering special characters at the beginning/end of lines and redirecting in from files that don't exist to make sure my error checking
+was robust. 
+
+CONCLUSION
+Overall I was able to make MyShell as comprehensive as I could. The only feature I couldn't figure out how to implement was chaining
+multiple & operators (cmd1 & cmd2 & cmd3) because MyShell only supports up to 2 commands for any given operator. This also means I could
+not get multiple pipes working as well. But aside from these things, and maybe some error cases I haven't thought about, this program
+should be good to go.
+
+
