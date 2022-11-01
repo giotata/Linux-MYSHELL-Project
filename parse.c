@@ -28,6 +28,7 @@ int parse(char *line, char **envp, char abs[]){
 	int append = 0;
 	char rdinFile[32];
 	char rdoutFile[32];
+	int ampCount = 0;
 
 	char *tok;
 	int count = 0;
@@ -72,6 +73,9 @@ int parse(char *line, char **envp, char abs[]){
 					append = 1;
 					rdout = 1;
 					strcpy(rdoutFile, commands[i+1]);
+				}
+				if(!strcmp(specChar,"&")){
+					ampCount++;
 				}	
 	
 				i++;//goes to next arg
@@ -175,6 +179,17 @@ int parse(char *line, char **envp, char abs[]){
 			execvp(cmd1[0], cmd1);//executes command and terminates child
 			perror("(4) an error has occurred");//this will not run unless execvp fails
 			exit(1);
+		}
+		else{
+			if(ampCount == 2){
+				pid = fork();
+				if(pid == 0){
+					cmd2[len2] = NULL;
+					execvp(cmd2[0], cmd2);//executes command and terminates child
+					perror("(4) an error has occurred");//this will not run unless execvp fails
+					exit(1);
+				}
+			}
 		}
 	}
 	if(current_cmd != 2){//this is the case where we run a single command
