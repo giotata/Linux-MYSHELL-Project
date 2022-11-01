@@ -10,6 +10,12 @@ int main(int argc, char**argv, char **envp){
 	char abs[64];
 	getcwd(abs, 64);//stores absolute filepath of MyShell executable 
 	
+	char *path;
+	path = malloc(128*sizeof(char));
+	snprintf(path, 128, "%s/MyShell", abs);
+
+	setenv("SHELL", path, 1);
+	
 	if(argc > 1){//when passes with an argument, MyShell enters batch mode
 		FILE *fp;
 		char buffer[64];
