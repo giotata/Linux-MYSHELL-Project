@@ -29,6 +29,7 @@ int parse(char *line, char **envp, char abs[]){
 	char rdinFile[32];
 	char rdoutFile[32];
 	int ampCount = 0;
+	int hasPipe = 0;
 
 	char *tok;
 	int count = 0;
@@ -53,12 +54,12 @@ int parse(char *line, char **envp, char abs[]){
 				if(strcmp(specChar, "&")){//& is the only op that can go at the end
 					if(i == count - 1){//if op is last arg, throw error
 						perror("an error has occurred");
-						exit(1);
+						return 1;
 					}
 				}
-				else if(i == 0){//if op is first arg, throw error
+				if(i == 0){//if op is first arg, throw error
 					perror("an error has occurred");
-					exit(1);
+					return 1;
 				}
 
 				if(!strcmp(specChar,"<")){
@@ -74,8 +75,16 @@ int parse(char *line, char **envp, char abs[]){
 					rdout = 1;
 					strcpy(rdoutFile, commands[i+1]);
 				}
+				if(!strcmp(specChar,"|")){
+					hasPipe = 1;
+				}
 				if(!strcmp(specChar,"&")){
 					ampCount++;
+				}
+
+				if((rdin || rdout) && hasPipe){
+					perror("an error has occurred");
+					return 1;
 				}	
 	
 				i++;//goes to next arg
@@ -102,7 +111,7 @@ int parse(char *line, char **envp, char abs[]){
 		int new_fd = open(rdinFile, O_RDONLY);//open given file for reading
 		if(new_fd == -1){
 			perror("an error has occurred");
-			exit(1);
+			return 1;
 		}
 		dup2(new_fd, 0);//replace stdin with file	
 		close(new_fd);//close duplicate file descriptor
@@ -131,7 +140,7 @@ int parse(char *line, char **envp, char abs[]){
  		
   	 	if(pipe(pip) < 0){//checks for pipe creation success
 			perror("(1) an error has occurred");
-			exit(1);
+			return 1;
 		}
 
         	pid = fork();//creates child for first command
@@ -144,7 +153,7 @@ int parse(char *line, char **envp, char abs[]){
 			cmd1[len1] = NULL;//NULL terminates argument array for execvp
         		if(execvp(cmd1[0], cmd1) < 0){//if execvp returns, an error has occurred
 				perror("(2) an error has occurred");
-				exit(1);
+				return 1;
 			}
         	} 
         	else { 
@@ -157,7 +166,7 @@ int parse(char *line, char **envp, char abs[]){
 				cmd2[len2] = NULL; 
             			if(execvp(cmd2[0], cmd2) < 0){
      					perror("(3) an error has occurred");
-        				exit(1);
+        				return 1;
      				}
         	    	} 
  			else {
@@ -178,7 +187,7 @@ int parse(char *line, char **envp, char abs[]){
 			cmd1[len1] = NULL;
 			execvp(cmd1[0], cmd1);//executes command and terminates child
 			perror("(4) an error has occurred");//this will not run unless execvp fails
-			exit(1);
+			return 1;
 		}
 		else{
 			if(ampCount == 2){
@@ -187,7 +196,7 @@ int parse(char *line, char **envp, char abs[]){
 					cmd2[len2] = NULL;
 					execvp(cmd2[0], cmd2);//executes command and terminates child
 					perror("(4) an error has occurred");//this will not run unless execvp fails
-					exit(1);
+					return 1;
 				}
 			}
 		}
@@ -197,10 +206,6 @@ int parse(char *line, char **envp, char abs[]){
 			runExternal(cmd1, len1);	
 		}
 	}
-	//else{//if none of the above cases are triggered, an error has occurred
-	//	perror("an error has occurred");
-	//	exit(1);
-	//}
 	
 	if(rdin || rdout){
 		if(!builtIns(cmd1, len1, envp, abs)){
@@ -226,14 +231,14 @@ int runExternal(char **cmd, int len){
 	int pid = fork();//creates child
 	if(pid == -1){//throws error on fork failure
 		perror("an error has occurred");
-		exit(1);
+		return 1;
 	}
 			
 	if(pid == 0){//cild
 		cmd[len] = NULL;//NULL terminate
 		execvp(cmd[0], cmd);
 		perror("an error has occurred");//error if execvp returns
-		exit(1);
+		return 1;
 	}
 	else{//parent waits for child to complete
 		waitpid(pid, NULL, 0);

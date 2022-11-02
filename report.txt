@@ -35,8 +35,26 @@ parallel to the shell.
 
 builtIns(char **cmd, int length, char** envp, char abs[]) | builtins.c
 This function takes a single command, number of arguments, environment variables, and the absolute file path of the shell and returns 1 
-if the command is a built in command and 0 otherwise. Environment variables are printed in environ and the absolute file path allows 
-the program to always be able to find the readme_doc file in the help function. 
+if the command matches one of built in commands, and runs that command, and 0 otherwise. 
+
+cd - if the given command is passed with a directory name as an argument, the program uses chdir to change its working directory to that. 
+Otherwise, prints the current working directory
+
+clr - prints "\033[H\033[2J" which clears the screen
+
+dir - if the given command is passed with a directory name as an argument, the program opens that directory and prints it's contents. 
+Otherwise it just opens and prints the contents of the current working directory
+
+environ - This function loops through and prints each variable in envp
+
+echo - loops through each argument after the word echo and prints them seperated by one space regardless of original spacing
+
+help - uses the abbsolute file path of the shell program to access and read readme_doc in order and prints it
+
+pause - uses fgetc and a while loop to stop the program until the user enters \n
+
+quit/exit - exit the program
+
 
 runExternal(char **cmd, int len) | parse.c
 Run external takes a single command and it's length. It then forks, NULL terminates the command array, and calls execvp on the command name 
@@ -49,7 +67,13 @@ it in interactive mode to make sure the program at least didn't segfault (as it 
 with the commands shown in the Week 9 lecture slides and ran it until it could run to completion. Throughout all of this, I am also checking
 for correctness i.e. making sure > overwrites and >> appends. Then it was time to check for errors, where I would do things like
 entering special characters at the beginning/end of lines and redirecting in from files that don't exist to make sure my error checking
-was robust. 
+was robust. Upon running my code on an invalid line that involved simultaneous piping and redirection, however, I realized my program was 
+still partially running the line before throwing the error. Because of this, I added several error checks BEFORE I run any of the commands
+to make sure the command characters aren't in the wrong places. I also added some variables to track things like redirection in, out, number
+of ampersands, piping, etc in order for the program to have a better idea of what it was doing before it actually ran. This also fixed another
+problem I had in testing which was that my program couldn't correctly do redirection in and out at the same time (i.e. cmd < file1 > file2). By 
+keeping track of what was being redirected where before the commands ran, the input and output were redirected BEFORE the commands ran. I also
+realized in testing that I could not chain & operators, so I added a variable to account for multiple background processes.
 
 CONCLUSION
 Overall I was able to make MyShell as comprehensive as I could. The only feature I couldn't figure out how to implement was chaining
