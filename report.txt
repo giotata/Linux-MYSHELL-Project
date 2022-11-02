@@ -77,8 +77,8 @@ realized in testing that I could not chain & operators, so I added a variable to
 
 CONCLUSION
 Overall I was able to make MyShell as comprehensive as I could. The only feature I couldn't figure out how to implement was chaining
-multiple & operators (cmd1 & cmd2 & cmd3) because MyShell only supports up to 2 commands for any given operator. This also means I could
-not get multiple pipes working as well. But aside from these things, and maybe some error cases I haven't thought about, this program
-should be good to go.
+more than 2 & operators (cmd1 & cmd2 & cmd3) because MyShell only supports up to 2 commands for any given operator. This also means I could
+not get multiple pipes working as well. I also could not figure out how to pipe and redirect in the same line. But aside from these things, and 
+maybe some error cases I haven't thought about, this program should be good to go.
 
 
